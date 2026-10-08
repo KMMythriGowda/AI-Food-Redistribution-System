@@ -1,0 +1,15 @@
+﻿src/components/inventory/ExpiryTimelineCard.tsx(3,27): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/components/inventory/InventoryCardGrid.tsx(3,53): error TS6133: 'Tag' is declared but its value is never read.
+src/components/inventory/InventoryItemModal.tsx(6,22): error TS6133: 'Calendar' is declared but its value is never read.
+src/components/inventory/InventoryItemModal.tsx(6,45): error TS6133: 'DollarSign' is declared but its value is never read.
+src/components/inventory/InventoryItemModal.tsx(6,57): error TS6133: 'Layers' is declared but its value is never read.
+src/components/inventory/InventoryMetricsHeader.tsx(3,19): error TS6133: 'DollarSign' is declared but its value is never read.
+src/components/inventory/InventoryMetricsHeader.tsx(3,69): error TS6133: 'CheckCircle2' is declared but its value is never read.
+src/hooks/useInventory.ts(6,3): error TS6133: 'InventoryItem' is declared but its value is never read.
+src/hooks/useInventory.ts(10,3): error TS6133: 'InventoryDashboardStats' is declared but its value is never read.
+src/hooks/useInventory.ts(11,3): error TS6133: 'CsvImportSummary' is declared but its value is never read.
+src/pages/dashboard/BusinessDashboardShell.tsx(8,3): error TS6133: 'Package' is declared but its value is never read.
+src/pages/dashboard/BusinessDashboardShell.tsx(9,3): error TS6133: 'Layers' is declared but its value is never read.
+src/pages/dashboard/BusinessDashboardShell.tsx(252,9): error TS2322: Type 'UseMutateAsyncFunction<ApiResponse<CsvImportSummary>, any, File, unknown>' is not assignable to type '(file: File) => Promise<void | CsvImportSummary>'.
+  Type 'Promise<ApiResponse<CsvImportSummary>>' is not assignable to type 'Promise<void | CsvImportSummary>'.
+    Type 'ApiResponse<CsvImportSummary>' is not assignable to type 'void | CsvImportSummary'.

@@ -1,0 +1,104 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: food_redistribution_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: food_redistribution_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d food_redistribution_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: food_redistribution_backend
+    restart: unless-stopped
+    environment:
+      FLASK_ENV: production
+      PORT: 5000
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production-12345}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-jwt-secret-key-change-in-production-67890}
+      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/food_redistribution_db
+      AI_SERVICE_URL: http://ai:8000
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173}
+      AUTO_VERIFY_NGO: ${AUTO_VERIFY_NGO:-false}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@foodredistribution.org}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-AdminPass123!}
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-System Administrator}
+      ENABLE_GEOCODING: ${ENABLE_GEOCODING:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      PASSWORD_RESET_EXPIRES_SECONDS: ${PASSWORD_RESET_EXPIRES_SECONDS:-1800}
+      PASSWORD_RESET_RETURN_LINK: ${PASSWORD_RESET_RETURN_LINK:-true}
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  ai:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: food_redistribution_ai
+    restart: unless-stopped
+    command: uvicorn app.ai.main:app --host 0.0.0.0 --port 8000
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/food_redistribution_db
+      AI_DAILY_JOB_HOUR: ${AI_DAILY_JOB_HOUR:-2}
+      AI_DAILY_JOB_MINUTE: ${AI_DAILY_JOB_MINUTE:-0}
+      AI_WEEKLY_JOB_DAY: ${AI_WEEKLY_JOB_DAY:-monday}
+      AI_WEEKLY_JOB_HOUR: ${AI_WEEKLY_JOB_HOUR:-3}
+      AI_WEEKLY_JOB_MINUTE: ${AI_WEEKLY_JOB_MINUTE:-0}
+      AI_MONTHLY_JOB_DAY: ${AI_MONTHLY_JOB_DAY:-1}
+      AI_MONTHLY_JOB_HOUR: ${AI_MONTHLY_JOB_HOUR:-4}
+      AI_MONTHLY_JOB_MINUTE: ${AI_MONTHLY_JOB_MINUTE:-0}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/ai/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    container_name: food_redistribution_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
